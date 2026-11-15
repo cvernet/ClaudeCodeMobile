@@ -28,6 +28,7 @@ export function NoteToolbar({
   onDone,
   draft,
   compact,
+  popoverPlacement = 'bottom',
 }: {
   note: Note;
   onChange: (patch: Partial<Note>) => void;
@@ -35,6 +36,8 @@ export function NoteToolbar({
   /** Note pas encore enregistrée : pas d'archivage / suppression. */
   draft?: boolean;
   compact?: boolean;
+  /** Ouvre les menus au-dessus de la barre (barre en bas d'un éditeur). */
+  popoverPlacement?: 'top' | 'bottom';
 }) {
   const { setTrashed, setArchived, dispatch, data, showToast } = useApp();
   const [pop, setPop] = useState<'color' | 'labels' | null>(null);
@@ -84,8 +87,14 @@ export function NoteToolbar({
         >
           <Palette size={size} />
         </button>
-        <Popover open={pop === 'color'} onClose={() => setPop(null)}>
-          <ColorPicker value={note.color} onChange={(color) => onChange({ color })} />
+        <Popover open={pop === 'color'} onClose={() => setPop(null)} placement={popoverPlacement}>
+          <ColorPicker
+            value={note.color}
+            onChange={(color) => {
+              onChange({ color });
+              setPop(null);
+            }}
+          />
         </Popover>
       </div>
       <div className="popover-anchor">
@@ -98,7 +107,7 @@ export function NoteToolbar({
         >
           <Tag size={size} />
         </button>
-        <Popover open={pop === 'labels'} onClose={() => setPop(null)}>
+        <Popover open={pop === 'labels'} onClose={() => setPop(null)} placement={popoverPlacement}>
           <LabelPicker selected={note.labels} onChange={(labels) => onChange({ labels })} />
         </Popover>
       </div>

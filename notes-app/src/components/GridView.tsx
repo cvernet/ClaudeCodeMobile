@@ -91,7 +91,7 @@ export const Composer = forwardRef<ComposerHandle, { labelId?: string }>(functio
         </div>
       )}
       <div className="note-editor-footer">
-        <NoteToolbar note={note} onChange={onChange} draft />
+        <NoteToolbar note={note} onChange={onChange} draft popoverPlacement="top" />
         <button type="button" className="text-btn" onClick={commit}>
           Fermer
         </button>

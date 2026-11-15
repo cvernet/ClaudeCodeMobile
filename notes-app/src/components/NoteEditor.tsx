@@ -88,7 +88,7 @@ export function NoteEditor({ id, draft, onClose: close }: { id: string | null; d
           )}
         </div>
         <div className="note-editor-footer">
-          <NoteToolbar note={note} onChange={onChange} onDone={onClose} draft={!currentId} />
+          <NoteToolbar note={note} onChange={onChange} onDone={onClose} draft={!currentId} popoverPlacement="top" />
           <button type="button" className="text-btn" onClick={onClose}>
             Fermer
           </button>

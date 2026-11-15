@@ -590,6 +590,7 @@ export function BoardView({ notes, labelId, addSignal }: { notes: Note[]; labelI
                     value={selectedNotes[0].color}
                     onChange={(color) => {
                       setLastColor(color);
+                      setColorOpen(false);
                       dispatch({ type: 'updateNotes', patches: selectedNotes.map((n) => ({ id: n.id, patch: { color } })) });
                     }}
                   />

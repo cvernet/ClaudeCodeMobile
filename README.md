@@ -1,3 +1,7 @@
+> Ce dépôt contient deux applications :
+> - **Coffre-fort** (ci-dessous) : gestionnaire de mots de passe Android.
+> - **[Notes Board](notes-app/README.md)** : prise de notes + tableau blanc (PWA), inspirée de Google Keep et Miro.
+
 # Coffre-fort — Gestionnaire de mots de passe (Android)
 
 Application Android native (Kotlin + Jetpack Compose) pour stocker et gérer des mots de passe

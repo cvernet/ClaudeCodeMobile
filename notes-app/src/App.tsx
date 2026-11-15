@@ -17,7 +17,10 @@ interface Prefs {
 }
 
 function loadPrefs(): Prefs {
-  const dark = typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches;
+  const forced = document.documentElement.dataset.theme;
+  const dark =
+    forced === 'dark' ||
+    (forced !== 'light' && typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches);
   const defaults: Prefs = { layout: 'grid', theme: dark ? 'dark' : 'light', collapsed: false };
   try {
     return { ...defaults, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') };

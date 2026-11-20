@@ -16,6 +16,7 @@
         <a th:if="${user.manager}" href="/expenses/pending">À valider</a>
         <a th:if="${user.admin}" href="/admin">Administration</a>
         <a href="/profile">Profil</a>
+        <a href="/help">Aide</a>
         <a href="/logout" class="logout">Déconnexion (<span th:text="${user.username}">u</span>)</a>
     </nav>
 </header>

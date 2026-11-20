@@ -25,6 +25,14 @@
             <label>URL <input name="url" value="http://rates.notefrais.local/api/rate?from=USD&amp;to=EUR"></label>
             <button type="submit">Tester</button>
         </form>
+        <form class="card" method="post" action="/admin/check-db">
+            <h3>Base de l'ancien outil</h3>
+            <p class="muted">Test de connexion avant reprise de données.</p>
+            <label>URL JDBC <input name="jdbcUrl" value="jdbc:postgresql://legacy-db.notefrais.local:5432/frais"></label>
+            <label>Utilisateur <input name="dbUser" value="reprise"></label>
+            <label>Mot de passe <input type="password" name="dbPassword"></label>
+            <button type="submit">Tester la connexion</button>
+        </form>
     </div>
 
     <h2>Utilisateurs</h2>

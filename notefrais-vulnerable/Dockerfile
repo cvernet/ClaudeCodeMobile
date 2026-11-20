@@ -1,12 +1,13 @@
-FROM maven:3.9-eclipse-temurin-21 AS build
+FROM maven:3.8-openjdk-17 AS build
 WORKDIR /src
 COPY pom.xml .
 COPY src ./src
 RUN mvn -q -DskipTests package
 
-FROM eclipse-temurin:21-jre
-WORKDIR /app
-COPY --from=build /src/target/notefrais-1.0.0.jar app.jar
-ENV UPLOAD_DIR=/app/uploads REPORT_DIR=/app/reports
+# Serveur d'applications de production : Tomcat 9 / JDK 17
+FROM tomcat:9.0.60-jdk17-temurin
+RUN rm -rf /usr/local/tomcat/webapps/*
+COPY --from=build /src/target/notefrais-1.0.0.war /usr/local/tomcat/webapps/ROOT.war
+ENV UPLOAD_DIR=/usr/local/tomcat/uploads REPORT_DIR=/usr/local/tomcat/reports
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["catalina.sh", "run"]

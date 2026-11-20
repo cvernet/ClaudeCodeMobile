@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:11.15
     environment:
       POSTGRES_DB: notefrais
       POSTGRES_USER: notefrais

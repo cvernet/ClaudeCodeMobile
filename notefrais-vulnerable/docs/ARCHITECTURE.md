@@ -4,7 +4,21 @@
 
 NoteFrais permet aux salariés de déclarer leurs notes de frais, aux managers de les valider et aux
 administrateurs de produire les exports comptables. L'application est un monolithe web Java
-(rendu côté serveur) adossé à une base PostgreSQL.
+(rendu côté serveur) adossé à une base PostgreSQL, packagé en WAR et déployé sur un Tomcat externe.
+
+### Pile technique
+
+| Couche | Composant | Version |
+|---|---|---|
+| Langage / JVM | Java (Eclipse Temurin) | 17 |
+| Serveur d'applications | Apache Tomcat (WAR `ROOT.war`) | 9.0.60 |
+| Framework | Spring Boot / Spring Framework | 2.6.5 / 5.3.17 |
+| Vues | Thymeleaf + thymeleaf-spring5 | 3.0.11 |
+| Sérialisation JSON | Jackson databind | 2.10.0 |
+| Journalisation | Log4j 2 (via SLF4J) | 2.14.1 |
+| Accès aux données | Spring JDBC (JdbcTemplate), driver PostgreSQL | 42.3.1 |
+| Base de données | PostgreSQL | 11.15 |
+| Utilitaires | Apache commons-text / commons-collections | 1.9 / 3.2.1 |
 
 ## 2. Schéma d'architecture
 
@@ -15,7 +29,7 @@ flowchart LR
         M[App mobile / outil comptable]
     end
 
-    subgraph APP["Application NoteFrais (Spring Boot 3, Tomcat embarqué :8080)"]
+    subgraph APP["Application NoteFrais (WAR Spring Boot 2.6 sur Tomcat 9.0.60 :8080)"]
         direction TB
         I[AuthInterceptor<br/>contrôle d'accès]
         subgraph C[Contrôleurs]
@@ -24,6 +38,7 @@ flowchart LR
             EC[ExpenseController]
             PC[ProfileController]
             AC[AdminController]
+            HC[HelpController]
             API[ApiController<br/>REST JSON]
         end
         subgraph S[Services]
@@ -43,7 +58,9 @@ flowchart LR
         ACT[Spring Actuator<br/>/actuator/*]
     end
 
-    DB[(PostgreSQL 16<br/>users / expenses / audit_log)]
+    DB[(PostgreSQL 11<br/>users / expenses / audit_log)]
+    LEG[(Base de l'ancien outil)]
+    LOG[[Log4j 2<br/>console / fichiers]]
     FSYS[[Système de fichiers<br/>uploads/ · reports/]]
     RATE[Service de taux de change<br/>HTTP externe]
     SH[[Shell OS<br/>tar]]
@@ -60,6 +77,8 @@ flowchart LR
     RS --> FSYS
     RS --> SH
     XR -- HTTP --> RATE
+    AC -- JDBC --> LEG
+    C --> LOG
 ```
 
 ### Déploiement
@@ -68,7 +87,7 @@ flowchart LR
 flowchart LR
     U[Poste utilisateur] -->|":8080"| A
     subgraph Docker Compose
-        A["conteneur app<br/>eclipse-temurin:21-jre"] -->|"JDBC :5432"| D["conteneur db<br/>postgres:16<br/>volume pgdata"]
+        A["conteneur app<br/>tomcat:9.0.60-jdk17<br/>webapps/ROOT.war"] -->|"JDBC :5432"| D["conteneur db<br/>postgres:11.15<br/>volume pgdata"]
     end
 ```
 
@@ -76,7 +95,8 @@ flowchart LR
 
 ```
 src/main/java/com/formation/notefrais/
-├── NoteFraisApplication.java      point d'entrée Spring Boot
+├── NoteFraisApplication.java      point d'entrée Spring Boot (exécution autonome)
+├── ServletInitializer.java        démarrage dans un Tomcat externe (WAR)
 ├── config/
 │   ├── AuthInterceptor.java       authentification, cookie "se souvenir de moi", accès /admin
 │   ├── WebConfig.java             enregistrement de l'intercepteur, CORS de l'API
@@ -84,12 +104,12 @@ src/main/java/com/formation/notefrais/
 ├── controller/                    couche web (pages Thymeleaf + API REST)
 ├── service/                       logique métier et intégrations (fichiers, shell, HTTP, XML)
 ├── repository/                    accès PostgreSQL via JdbcTemplate
-├── model/                         User, Expense, RememberMeToken
+├── model/                         User, Expense, ExpenseBatch, RememberMeToken
 └── util/                          HashUtil (MD5, jetons), CookieSerializer
 src/main/resources/
 ├── application.properties         configuration (datasource, session, actuator…)
 ├── db/schema.sql, db/data.sql     schéma et jeu de données
-├── templates/                     vues Thymeleaf
+├── templates/                     vues Thymeleaf (dont help/fr.html, help/en.html)
 └── static/css/style.css
 ```
 
@@ -149,11 +169,14 @@ erDiagram
 | GET | `/expenses/pending` | ExpenseController | File de validation (managers) |
 | POST | `/expenses/{id}/decision` | ExpenseController | Approbation / refus + notification |
 | GET/POST | `/profile` | ProfileController | Email, IBAN, signature |
+| GET | `/help?lang=` | HelpController | Aide en ligne (vue `help/<lang>`) |
 | GET | `/admin` | AdminController | Utilisateurs, journal d'audit |
 | POST | `/admin/export` | AdminController | Export CSV archivé en .tar.gz |
 | POST | `/admin/import` | AdminController | Import XML de notes |
 | GET | `/admin/check-url?url=` | AdminController | Test du service de taux |
+| POST | `/admin/check-db` | AdminController | Test de connexion JDBC à la base de l'ancien outil |
 | GET | `/api/expenses?userId=&q=&sort=` | ApiController | Notes d'un utilisateur (JSON) |
+| POST | `/api/expenses/batch` | ApiController | Réception d'un lot de notes (JSON, voir 6.6) |
 | GET | `/api/users/{id}` | ApiController | Fiche utilisateur (JSON) |
 | GET | `/actuator/**` | Spring Actuator | Supervision |
 
@@ -274,6 +297,39 @@ sequenceDiagram
     AC-->>A: page admin + résultat
 ```
 
+### 6.6 Synchronisation par lot (application mobile)
+
+```mermaid
+sequenceDiagram
+    participant MOB as App mobile
+    participant API as ApiController
+    participant OM as ObjectMapper (typage par défaut)
+    participant ES as ExpenseService
+    participant DB as PostgreSQL
+
+    MOB->>API: POST /api/expenses/batch (JSON)
+    API->>OM: readValue(json, ExpenseBatch)
+    OM-->>API: ExpenseBatch {source, metadata, expenses}
+    loop pour chaque note
+        API->>ES: submit(note, EUR)
+        ES->>DB: INSERT INTO expenses …
+    end
+    API-->>MOB: "n note(s) importée(s)"
+```
+
+Format attendu (le typage par défaut de Jackson impose d'indiquer le type des champs non concrets) :
+
+```json
+{
+  "source": "mobile-2.4",
+  "metadata": ["java.util.HashMap", {"device": "Pixel 8"}],
+  "expenses": ["java.util.ArrayList", [
+    {"userId": 3, "expenseDate": "2026-11-19", "category": "TRANSPORT",
+     "description": "Métro", "amountHt": 1.90, "vatRate": 10}
+  ]]
+}
+```
+
 ## 7. Configuration
 
 | Propriété | Rôle | Défaut |
@@ -282,4 +338,5 @@ sequenceDiagram
 | `UPLOAD_DIR` | Dossier des justificatifs | `./uploads` |
 | `REPORT_DIR` | Dossier des exports | `./reports` |
 | `spring.sql.init.mode=always` | Recrée le schéma au démarrage | — |
+| `spring.mvc.format.date=iso` | Format des dates saisies (AAAA-MM-JJ) | — |
 | `management.endpoints.web.exposure.include` | Endpoints Actuator exposés | `*` |

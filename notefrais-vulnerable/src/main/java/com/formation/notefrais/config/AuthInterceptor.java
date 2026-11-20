@@ -4,10 +4,10 @@ import com.formation.notefrais.model.RememberMeToken;
 import com.formation.notefrais.model.User;
 import com.formation.notefrais.repository.UserRepository;
 import com.formation.notefrais.util.CookieSerializer;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 

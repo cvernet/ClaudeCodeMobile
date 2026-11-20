@@ -2,7 +2,7 @@ package com.formation.notefrais.controller;
 
 import com.formation.notefrais.model.User;
 import com.formation.notefrais.repository.ExpenseRepository;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -10,16 +10,19 @@
 
 | Profil | Fonctions |
 |---|---|
-| Salarié | Connexion, tableau de bord mensuel, saisie d'une note (montant HT, TVA, devise, justificatif), recherche/tri, consultation, suppression, profil (email, IBAN, signature) |
+| API | Consultation JSON, synchronisation par lot depuis l'application mobile |
+| Salarié | Connexion, tableau de bord mensuel, aide en ligne (FR/EN), saisie d'une note (montant HT, TVA, devise, justificatif), recherche/tri, consultation, suppression, profil (email, IBAN, signature) |
 | Manager | + file des notes à valider, approbation / refus avec message de notification |
-| Admin | + liste des utilisateurs, journal d'audit, export comptable (.tar.gz), import XML, test du service de taux de change |
+| Admin | + liste des utilisateurs, journal d'audit, export comptable (.tar.gz), import XML, test du service de taux de change, test de connexion à la base de l'ancien outil |
 
 Traitement métier (`ExpenseService`) : calcul TTC = HT × (1 + TVA), conversion de devise,
 application des plafonds par catégorie (Repas 25 €, Hébergement 120 €, Autre 50 €, Transport sans plafond).
 
 ## Stack
 
-Java 21 · Spring Boot 3.3 (Spring MVC, Thymeleaf, JdbcTemplate, Actuator) · PostgreSQL 16 · Maven · Docker Compose
+Java 17 · Spring Boot 2.6.5 / Spring Framework 5.3.17 (Spring MVC, Thymeleaf 3.0.11, JdbcTemplate, Actuator) · Log4j 2.14.1 · Jackson 2.10.0 · PostgreSQL 11 (driver JDBC 42.3.1) · WAR déployé sur Tomcat 9.0.60 · Maven · Docker Compose
+
+> La pile est **volontairement figée sur des versions obsolètes** (voir le corrigé, section « Composants obsolètes »).
 
 ## Lancement
 
@@ -28,9 +31,10 @@ Java 21 · Spring Boot 3.3 (Spring MVC, Thymeleaf, JdbcTemplate, Actuator) · Po
 docker compose up --build
 # -> http://localhost:8080
 
-# Option 2 : base en conteneur, application en local
+# Option 2 : base en conteneur, application en local (JDK 17 ou plus)
 docker compose up -d db
 mvn spring-boot:run
+# ou : mvn package && java -jar target/notefrais-1.0.0.war
 ```
 
 Le schéma et les données de démonstration sont (re)créés à chaque démarrage (`src/main/resources/db/`).

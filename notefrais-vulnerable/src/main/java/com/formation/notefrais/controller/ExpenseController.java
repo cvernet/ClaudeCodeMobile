@@ -8,7 +8,7 @@ import com.formation.notefrais.repository.UserRepository;
 import com.formation.notefrais.service.ExpenseService;
 import com.formation.notefrais.service.FileStorageService;
 import com.formation.notefrais.service.NotificationService;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.HttpSession;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;

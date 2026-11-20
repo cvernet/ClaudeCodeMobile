@@ -7,15 +7,16 @@ import com.formation.notefrais.repository.AuditRepository;
 import com.formation.notefrais.repository.UserRepository;
 import com.formation.notefrais.util.CookieSerializer;
 import com.formation.notefrais.util.HashUtil;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
@@ -42,10 +43,12 @@ public class LoginController {
                         @RequestParam String password,
                         @RequestParam(required = false) String redirect,
                         @RequestParam(required = false, defaultValue = "false") boolean rememberMe,
+                        @RequestHeader(value = "User-Agent", required = false) String userAgent,
                         HttpSession session,
                         HttpServletResponse response,
                         Model model) {
 
+        log.info("Tentative de connexion de " + username + " depuis le navigateur " + userAgent);
         User user = userRepository.authenticate(username, HashUtil.md5(password));
 
         if (user == null) {

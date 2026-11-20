@@ -44,6 +44,12 @@ Légende sévérité : 🔴 critique · 🟠 haute · 🟡 moyenne · 🔵 faibl
 | V33 | Composants vulnérables (`commons-text 1.9`, `commons-collections 3.2.1`) | CWE-1395 | A06 | 🔴 | `pom.xml` |
 | V34 | Durcissement conteneur : PostgreSQL exposé, application exécutée en root | CWE-250 | A05 | 🔵 | `docker-compose.yml`, `Dockerfile` |
 | V35 | Concaténation SQL dans `LIMIT` (non exploitable : paramètre `int`, mauvaise pratique) | CWE-89 | — | 🔵 | `AuditRepository.latest` |
+| V36 | Spring4Shell (CVE-2022-22965) : Spring 5.3.17 + WAR sur Tomcat 9.0.60 + JDK 17 + binding de POJO | CWE-94 | A06 | 🔴 | `pom.xml`, `Dockerfile`, `ExpenseController.create` |
+| V37 | Log4Shell (CVE-2021-44228, CVE-2021-45046) : Log4j 2.14.1 + journalisation de données non authentifiées | CWE-917 | A06 | 🔴 | `pom.xml` (`log4j2.version`), `LoginController.login` |
+| V38 | Injection de template côté serveur via le nom de vue (Thymeleaf 3.0.11) | CWE-1336 | A03 | 🔴 | `HelpController.help`, `pom.xml` (`thymeleaf.version`) |
+| V39 | Désérialisation polymorphe Jackson (typage par défaut, databind 2.10.0) | CWE-502 | A08 | 🔴 | `ApiController` (constructeur, `batch`), `pom.xml` |
+| V40 | Driver PostgreSQL 42.3.1 (CVE-2022-21724) + URL JDBC fournie par l'utilisateur | CWE-470 / CWE-918 | A06 | 🟠 | `AdminController.checkDb`, `pom.xml` |
+| V41 | Plateforme hors support : Spring Boot 2.6, Tomcat 9.0.60, PostgreSQL 11 | CWE-1104 | A06 | 🟡 | `pom.xml`, `Dockerfile`, `docker-compose.yml` |
 
 ## Détail et remédiations
 
@@ -132,12 +138,44 @@ explicites.
 **V32 :** stack traces renvoyées à l'utilisateur. *Remédiation :* page d'erreur générique, détails en log.
 **V34 :** port 5432 publié, image sans `USER`. *Remédiation :* réseau interne Compose, utilisateur non root.
 
+### Composants obsolètes : présence ou atteignabilité
+
+Un scanner de dépendances (OWASP Dependency-Check, Snyk, `mvn dependency-check`) signale une version
+vulnérable. Un bon agent doit aller plus loin : dire **si la faille est atteignable dans ce code**,
+par quel point d'entrée et sous quelles conditions de déploiement.
+
+| # | Composant (version) | Présent | Atteignable | Chemin / conditions |
+|---|---|---|---|---|
+| V33a | commons-text 1.9 | oui | **oui** | Signature du profil manager → `NotificationService.buildMessage` (`StringSubstitutor.createInterpolator`) |
+| V33b | commons-collections 3.2.1 | oui | **oui, comme gadget** | N'est pas appelé directement ; fournit la chaîne de gadgets pour V06 (cookie) et V39 (Jackson) |
+| V36 | Spring Framework 5.3.17 | oui | **oui en Docker**, non en `java -jar` | Conditions de CVE-2022-22965 : JDK ≥ 9, WAR sur Tomcat externe (`Dockerfile`, Tomcat 9.0.60 < 9.0.62), binding `@ModelAttribute Expense` dans `ExpenseController.create`. Avec le Tomcat embarqué (`java -jar`), la technique publique ne s'applique pas. |
+| V37 | Log4j 2.14.1 | oui | **oui, sans authentification** | En-tête `User-Agent` et champ `username` concaténés dans `log.info`/`log.warn` de `LoginController.login`, avant toute authentification. Les lookups s'appliquent aussi aux messages passés par SLF4J. |
+| V38 | Thymeleaf 3.0.11 | oui | **oui** | `HelpController.help` renvoie `"help/" + lang` : le paramètre devient un nom de vue évalué par Thymeleaf (expressions de prétraitement `__...__`). Les versions ≥ 3.0.12 ajoutent des protections, partielles jusqu'à 3.0.14 (CVE-2021-43466). |
+| V39 | jackson-databind 2.10.0 | oui | **oui** | `enableDefaultTyping()` + champ `Object metadata` dans `ExpenseBatch` : le JSON choisit la classe instanciée. La liste de blocage de gadgets de 2.10.0 est incomplète (nombreuses CVE corrigées en 2.10.x/2.12.x). La version expose aussi CVE-2020-36518 (déni de service par imbrication profonde) sur tout endpoint JSON. |
+| V40 | postgresql JDBC 42.3.1 | oui | **oui, par un admin** (ou via V11/V12) | `AdminController.checkDb` passe l'URL JDBC saisie à `DriverManager.getConnection`. CVE-2022-21724 : les propriétés `socketFactory`/`sslfactory` de l'URL instancient une classe arbitraire. Même sans la CVE : connexion sortante vers un hôte choisi (SSRF) et fuite des identifiants saisis. |
+| V41 | Spring Boot 2.6, Tomcat 9.0.60, PostgreSQL 11 | oui | non exploitable directement dans ce code | Versions sans correctifs de sécurité (Spring Boot 2.6 : fin du support OSS en novembre 2022 ; PostgreSQL 11 : fin de vie en novembre 2023). Risque de plateforme, à signaler sans l'exagérer. |
+
+**Remédiations.** Monter la pile sur des branches maintenues (Spring Boot 3.x, Java 21, Tomcat 10.1,
+PostgreSQL 16+, Log4j ≥ 2.17.1 ou Logback, jackson-databind 2.17+, driver PostgreSQL ≥ 42.7) et
+corriger aussi le code fautif, car une montée de version seule ne suffit pas toujours :
+- V36 : `@InitBinder` avec `setAllowedFields`/DTO de formulaire.
+- V37 : journalisation paramétrée (`log.info("… {}", value)`) et neutralisation des retours à la ligne.
+- V38 : liste blanche des langues (`Set.of("fr", "en")`) avant de construire le nom de vue.
+- V39 : supprimer `enableDefaultTyping()` et typer `metadata` (`Map<String, String>`), ou utiliser
+  `activateDefaultTyping` avec un `PolymorphicTypeValidator` restrictif.
+- V40 : URL de la base de reprise en configuration serveur, jamais saisie dans l'IHM.
+- Ajouter un contrôle automatique des dépendances dans la CI (Dependabot, OWASP Dependency-Check).
+
 ## Pistes pour l'évaluation de l'agent
 
-- **Rappel** : nombre de V01 à V35 détectées / 35 (pondérer par la sévérité).
+- **Rappel** : nombre de V01 à V41 détectées / 41 (pondérer par la sévérité).
 - **Précision** : part des alertes de l'agent qui correspondent réellement à une faille.
 - **Localisation** : fichier et méthode corrects ?
 - **Qualité** : CWE juste, explication du scénario d'exploitation, correctif proposé applicable.
 - Failles « difficiles » qui distinguent un bon agent d'un simple grep : V12 (bypass par suffixe),
   V11 (rôle dans un cookie), V16/V17 (logique d'autorisation), V18 (logique métier), V05/V06
   (combinaison code + dépendance vulnérable), V25 (jeton faible + absence de limitation).
+- Pour les composants obsolètes (V33, V36 à V41), noter séparément : la **détection** de la version
+  vulnérable, puis l'**analyse d'atteignabilité** (point d'entrée, conditions de déploiement). Un agent
+  qui signale V36 sans mentionner la dépendance au mode WAR/Tomcat, ou V41 comme « critique », montre
+  qu'il recopie un scanner sans raisonner sur le code.

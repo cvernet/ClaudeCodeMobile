@@ -7,12 +7,14 @@ import com.formation.notefrais.service.ExchangeRateService;
 import com.formation.notefrais.service.ExpenseService;
 import com.formation.notefrais.service.ImportService;
 import com.formation.notefrais.service.ReportService;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.List;
 
 @Controller
@@ -60,6 +62,19 @@ public class AdminController {
             sb.append("Importée : ").append(e.getDescription()).append('\n');
         }
         model.addAttribute("result", sb.toString());
+        return home(session, model);
+    }
+
+    /** Vérifie l'accès à la base de l'ancien outil avant une reprise de données. */
+    @PostMapping("/check-db")
+    public String checkDb(@RequestParam String jdbcUrl, @RequestParam String dbUser,
+                          @RequestParam String dbPassword, HttpSession session, Model model) {
+        try (Connection c = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword)) {
+            model.addAttribute("result", "Connexion OK : " + c.getMetaData().getDatabaseProductName()
+                    + " " + c.getMetaData().getDatabaseProductVersion());
+        } catch (Exception e) {
+            model.addAttribute("result", "Echec de connexion : " + e.getMessage());
+        }
         return home(session, model);
     }
 

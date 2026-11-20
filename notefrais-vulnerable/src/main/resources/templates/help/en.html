@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Help')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main>
+    <p class="muted">Language: <a href="/help?lang=fr">Français</a> · <strong>English</strong></p>
+    <h1>Help</h1>
+    <div class="card">
+        <h3>Submitting an expense</h3>
+        <p>Enter the amount before tax and the VAT rate: the total is computed automatically.
+            Attach the receipt. For a foreign-currency expense, pick the currency: the amount is
+            converted to euros at the daily rate.</p>
+        <h3>Reimbursement ceilings</h3>
+        <table>
+            <thead><tr><th>Category</th><th>Ceiling</th></tr></thead>
+            <tbody>
+            <tr><td>Meals</td><td class="num">€25.00</td></tr>
+            <tr><td>Hotel (per night)</td><td class="num">€120.00</td></tr>
+            <tr><td>Other</td><td class="num">€50.00</td></tr>
+            <tr><td>Transport</td><td class="num">no ceiling</td></tr>
+            </tbody>
+        </table>
+        <h3>Approval</h3>
+        <p>Your manager approves or rejects each expense. Approved expenses are paid to the IBAN in your profile.</p>
+    </div>
+</main>
+</body>
+</html>

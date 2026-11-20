@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Aide')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main>
+    <p class="muted">Langue : <strong>Français</strong> · <a href="/help?lang=en">English</a></p>
+    <h1>Aide</h1>
+    <div class="card">
+        <h3>Saisir une note de frais</h3>
+        <p>Indiquez le montant hors taxes et le taux de TVA : le montant TTC est calculé automatiquement.
+            Joignez le justificatif (ticket, facture). Pour une dépense en devise étrangère, choisissez la
+            devise : le montant est converti en euros au taux du jour.</p>
+        <h3>Plafonds de remboursement</h3>
+        <table>
+            <thead><tr><th>Catégorie</th><th>Plafond</th></tr></thead>
+            <tbody>
+            <tr><td>Repas</td><td class="num">25,00 €</td></tr>
+            <tr><td>Hébergement (par nuit)</td><td class="num">120,00 €</td></tr>
+            <tr><td>Autre</td><td class="num">50,00 €</td></tr>
+            <tr><td>Transport</td><td class="num">sans plafond</td></tr>
+            </tbody>
+        </table>
+        <h3>Validation</h3>
+        <p>Votre manager valide ou refuse chaque note. Les notes approuvées sont remboursées sur l'IBAN
+            renseigné dans votre profil.</p>
+    </div>
+</main>
+</body>
+</html>

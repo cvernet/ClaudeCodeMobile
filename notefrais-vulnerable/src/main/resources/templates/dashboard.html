@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tableau de bord')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main>
+    <h1>Bonjour <span th:text="${user.fullName}">Nom</span></h1>
+    <div class="stats">
+        <div class="stat"><span class="label">Rôle</span><span class="value" th:text="${user.role}">EMPLOYEE</span></div>
+        <div class="stat" th:if="${user.manager}"><span class="label">Total en attente de validation</span>
+            <span class="value" th:text="${#numbers.formatDecimal(pending, 1, 2, 'COMMA')} + ' €'">0</span></div>
+    </div>
+    <h2>Récapitulatif mensuel</h2>
+    <table>
+        <thead><tr><th>Mois</th><th>Nb notes</th><th>Total TTC</th><th>Remboursable</th></tr></thead>
+        <tbody>
+        <tr th:each="t : ${totals}">
+            <td th:text="${t.month}"></td>
+            <td th:text="${t.nb}"></td>
+            <td class="num" th:text="${t.total_ttc} + ' €'"></td>
+            <td class="num" th:text="${t.total_reimbursable} + ' €'"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(totals)}"><td colspan="4" class="muted">Aucune note de frais.</td></tr>
+        </tbody>
+    </table>
+    <p><a class="button" href="/expenses/new">+ Nouvelle note de frais</a></p>
+</main>
+</body>
+</html>

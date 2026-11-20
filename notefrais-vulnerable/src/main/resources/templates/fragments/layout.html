@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' — NoteFrais'">NoteFrais</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header th:fragment="nav" class="topbar">
+    <a class="brand" href="/">NoteFrais</a>
+    <nav th:if="${user != null}">
+        <a href="/">Tableau de bord</a>
+        <a href="/expenses">Mes notes</a>
+        <a href="/expenses/new">Nouvelle note</a>
+        <a th:if="${user.manager}" href="/expenses/pending">À valider</a>
+        <a th:if="${user.admin}" href="/admin">Administration</a>
+        <a href="/profile">Profil</a>
+        <a href="/logout" class="logout">Déconnexion (<span th:text="${user.username}">u</span>)</a>
+    </nav>
+</header>
+</body>
+</html>

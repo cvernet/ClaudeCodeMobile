@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Note de frais')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main th:if="${expense != null}">
+    <h1>Note de frais n°<span th:text="${expense.id}"></span></h1>
+    <div class="card">
+        <dl>
+            <dt>Salarié</dt><dd th:text="${expense.ownerName}"></dd>
+            <dt>Date</dt><dd th:text="${expense.expenseDate}"></dd>
+            <dt>Catégorie</dt><dd th:text="${expense.category}"></dd>
+            <dt>Description</dt><dd th:utext="${expense.description}"></dd>
+            <dt>Montant HT</dt><dd th:text="${expense.amountHt} + ' €'"></dd>
+            <dt>TVA</dt><dd th:text="${expense.vatRate} + ' %'"></dd>
+            <dt>Montant TTC</dt><dd th:text="${expense.amountTtc} + ' €'"></dd>
+            <dt>Remboursable</dt><dd th:text="${expense.reimbursable} + ' €'"></dd>
+            <dt>Statut</dt><dd><span th:class="'badge ' + ${expense.status}" th:text="${expense.status}"></span></dd>
+            <dt>Justificatif</dt>
+            <dd><a th:if="${expense.receiptPath}" th:href="@{/expenses/receipt(file=${expense.receiptPath})}" th:text="${expense.receiptPath}"></a>
+                <span th:unless="${expense.receiptPath}" class="muted">aucun</span></dd>
+        </dl>
+    </div>
+    <p><a href="/expenses">← Retour</a></p>
+</main>
+</body>
+</html>

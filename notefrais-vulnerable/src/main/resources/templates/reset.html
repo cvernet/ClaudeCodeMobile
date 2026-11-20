@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mot de passe oublié')}"></head>
+<body class="center">
+<div class="card narrow">
+    <h1>Mot de passe oublié</h1>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+    <div class="alert info" th:if="${info}" th:text="${info}"></div>
+
+    <form th:if="${username == null}" method="post" action="/reset">
+        <label>Identifiant <input name="username"></label>
+        <button type="submit">Recevoir un code</button>
+    </form>
+
+    <form th:if="${username != null}" method="post" action="/reset/confirm">
+        <input type="hidden" name="username" th:value="${username}">
+        <label>Code reçu (6 chiffres) <input name="token"></label>
+        <label>Nouveau mot de passe <input type="password" name="newPassword"></label>
+        <button type="submit">Changer le mot de passe</button>
+    </form>
+    <p><a href="/login">Retour</a></p>
+</div>
+</body>
+</html>

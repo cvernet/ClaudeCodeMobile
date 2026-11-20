@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Connexion')}"></head>
+<body class="center">
+<div class="card narrow">
+    <h1>NoteFrais</h1>
+    <p class="muted">Gestion des notes de frais</p>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+    <form method="post" action="/login">
+        <input type="hidden" name="redirect" th:value="${redirect}">
+        <label>Identifiant <input name="username" autofocus></label>
+        <label>Mot de passe <input type="password" name="password"></label>
+        <label class="inline"><input type="checkbox" name="rememberMe" value="true"> Se souvenir de moi</label>
+        <button type="submit">Se connecter</button>
+    </form>
+    <p><a href="/reset">Mot de passe oublié ?</a></p>
+    <!-- Comptes de test : admin / Admin2024!  —  jdupont / employe123 -->
+</div>
+</body>
+</html>

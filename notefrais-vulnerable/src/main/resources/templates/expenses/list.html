@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mes notes')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main>
+    <h1>Mes notes de frais</h1>
+    <form class="toolbar" method="get" action="/expenses">
+        <input name="q" th:value="${q}" placeholder="Rechercher dans les descriptions">
+        <select name="sort">
+            <option value="e.expense_date DESC">Date (récent)</option>
+            <option value="e.expense_date ASC">Date (ancien)</option>
+            <option value="e.amount_ttc DESC">Montant</option>
+        </select>
+        <button type="submit">Filtrer</button>
+    </form>
+    <p th:if="${q != null and q != ''}">Résultats pour : <strong th:utext="${q}"></strong></p>
+
+    <table>
+        <thead><tr><th>Date</th><th>Catégorie</th><th>Description</th><th>TTC</th><th>Remboursable</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="e : ${expenses}">
+            <td th:text="${e.expenseDate}"></td>
+            <td th:text="${e.category}"></td>
+            <td th:utext="${e.description}"></td>
+            <td class="num" th:text="${e.amountTtc} + ' €'"></td>
+            <td class="num" th:text="${e.reimbursable} + ' €'"></td>
+            <td><span th:class="'badge ' + ${e.status}" th:text="${e.status}"></span></td>
+            <td>
+                <a th:href="@{/expenses/{id}(id=${e.id})}">Voir</a>
+                <a th:href="@{/expenses/{id}/delete(id=${e.id})}" onclick="return confirm('Supprimer ?')">Supprimer</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

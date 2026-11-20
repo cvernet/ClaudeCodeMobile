@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: notefrais
+      POSTGRES_USER: notefrais
+      POSTGRES_PASSWORD: N0teFr4is_Pr0d!
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/notefrais
+      DB_USER: notefrais
+      DB_PASSWORD: N0teFr4is_Pr0d!
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  pgdata:

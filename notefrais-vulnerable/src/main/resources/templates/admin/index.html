@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Administration')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main>
+    <h1>Administration</h1>
+    <div class="card" th:if="${result}"><h3>Résultat</h3><pre th:text="${result}"></pre></div>
+
+    <div class="grid">
+        <form class="card" method="post" action="/admin/export">
+            <h3>Export comptable</h3>
+            <p class="muted">Archive .tar.gz des notes approuvées.</p>
+            <label>Nom de l'archive <input name="name" value="export-2026-11"></label>
+            <button type="submit">Générer</button>
+        </form>
+        <form class="card" method="post" action="/admin/import" enctype="multipart/form-data">
+            <h3>Import XML</h3>
+            <p class="muted">Fichier exporté par l'ancien outil.</p>
+            <input type="file" name="file" accept=".xml">
+            <button type="submit">Importer</button>
+        </form>
+        <form class="card" method="get" action="/admin/check-url">
+            <h3>Test du service de taux</h3>
+            <label>URL <input name="url" value="http://rates.notefrais.local/api/rate?from=USD&amp;to=EUR"></label>
+            <button type="submit">Tester</button>
+        </form>
+    </div>
+
+    <h2>Utilisateurs</h2>
+    <table>
+        <thead><tr><th>Id</th><th>Identifiant</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Hash</th><th>IBAN</th></tr></thead>
+        <tbody>
+        <tr th:each="u : ${users}">
+            <td th:text="${u.id}"></td><td th:text="${u.username}"></td><td th:text="${u.fullName}"></td>
+            <td th:text="${u.email}"></td><td th:text="${u.role}"></td>
+            <td><code th:text="${u.password}"></code></td><td th:text="${u.iban}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Journal d'audit</h2>
+    <table>
+        <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Détails</th></tr></thead>
+        <tbody>
+        <tr th:each="a : ${audit}">
+            <td th:text="${a.created_at}"></td><td th:utext="${a.username}"></td>
+            <td th:text="${a.action}"></td><td th:utext="${a.details}"></td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('À valider')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main>
+    <h1>Notes de frais à valider</h1>
+    <div class="alert info" th:if="${notification}"><pre th:utext="${notification}"></pre></div>
+    <table>
+        <thead><tr><th>N°</th><th>Salarié</th><th>Date</th><th>Catégorie</th><th>Description</th><th>TTC</th><th>Remboursable</th><th>Décision</th></tr></thead>
+        <tbody>
+        <tr th:each="e : ${expenses}">
+            <td><a th:href="@{/expenses/{id}(id=${e.id})}" th:text="${e.id}"></a></td>
+            <td th:text="${e.ownerName}"></td>
+            <td th:text="${e.expenseDate}"></td>
+            <td th:text="${e.category}"></td>
+            <td th:utext="${e.description}"></td>
+            <td class="num" th:text="${e.amountTtc} + ' €'"></td>
+            <td class="num" th:text="${e.reimbursable} + ' €'"></td>
+            <td>
+                <form method="post" th:action="@{/expenses/{id}/decision(id=${e.id})}" class="inline">
+                    <button name="decision" value="approve">Approuver</button>
+                    <button name="decision" value="reject" class="secondary">Refuser</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>
